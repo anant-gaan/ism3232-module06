@@ -1,8 +1,16 @@
 # tests/test_my_assistant.py
 # Author: Anant Gaan
 
+from mock_model import MockModel
 from my_assistant import StudyRoomAssistant
 from my_tool import RoomLookup
+
+
+class SilentModel:
+    """A model that has no answer."""
+
+    def reply(self, instructions, history):
+        return None
 
 
 def make_assistant():
@@ -14,7 +22,7 @@ def make_assistant():
             "business hall": "none",
         }
     )
-    return StudyRoomAssistant("Casey", "Be helpful.", rooms)
+    return StudyRoomAssistant("Casey", "Be helpful.", rooms, MockModel())
 
 
 def test_known_building_uses_room_tool():
@@ -36,9 +44,10 @@ def test_reservation_request_goes_to_front_desk():
 
 
 def test_unknown_question_gets_safe_reply():
-    assistant = make_assistant()
+    rooms = RoomLookup({"library": "Room 101 and Room 103"})
+    assistant = StudyRoomAssistant("Casey", "Be helpful.", rooms, SilentModel())
     reply = assistant.respond("Do you sell coffee?")
-    assert "not sure" in reply
+    assert "try again" in reply
 
 
 def test_conversation_records_both_roles():
@@ -48,3 +57,8 @@ def test_conversation_records_both_roles():
     assert len(assistant.history) == 4
     assert assistant.history[0]["role"] == "user"
     assert assistant.history[1]["role"] == "assistant"
+
+
+def test_other_messages_go_to_the_model():
+    assistant = make_assistant()
+    assert assistant.respond("hello") == "Hello! How can I help you today?"

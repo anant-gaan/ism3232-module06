@@ -7,11 +7,12 @@ HANDOFF_WORDS = ["reserve", "cancel", "change"]
 class StudyRoomAssistant:
     """A mock assistant that helps students check study room availability."""
 
-    def __init__(self, name, instructions, room_lookup):
-        """Set up the assistant with its name, instructions, tool, and history."""
+    def __init__(self, name, instructions, room_lookup, model):
+        """Set up the assistant with its name, instructions, tool, model, and history."""
         self.name = name
         self.instructions = instructions
         self.room_lookup = room_lookup
+        self.model = model
         self.history = []
 
     def respond(self, user_message):
@@ -28,13 +29,14 @@ class StudyRoomAssistant:
             return "I can't make reservations. I'm passing you to the front desk."
         if "available" in text or "rooms" in text:
             return self.rooms_reply(user_message)
-        if "hello" in text:
-            return (
-                f"Hello! I'm {self.name}. I can check which study rooms are available."
-            )
-        return (
-            "I'm not sure how to help with that. I can check study room availability."
-        )
+        return self.model_reply()
+
+    def model_reply(self):
+        """Ask the model for a reply, or give a safe answer if it has none."""
+        reply = self.model.reply(self.instructions, self.history)
+        if reply is None:
+            return "Sorry, I can't answer that right now. Please try again in a moment."
+        return reply
 
     def needs_human(self, text):
         """Return True if the student wants to change a room reservation."""
