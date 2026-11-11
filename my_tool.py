@@ -21,3 +21,23 @@ class RoomLookup:
         if building in self.rooms:
             return self.rooms[building]
         return None
+
+    def room_exists(self, building, room):
+        """Return True if the room is listed in the building."""
+        found = self.find_building(building)
+        if found is None:
+            return False
+
+        rooms = self.rooms_for(found)
+        return room.lower() in rooms.lower()
+
+    def check_available_rooms(self, building):
+        """Look up available study rooms in one building.
+
+        Args:
+            building: The building name, like library.
+        """
+        found = self.find_building(building)
+        if found is None:
+            return "That building was not found. I can check library, student center, or business hall."
+        return f"Available rooms in {found}: {self.rooms_for(found)}."
